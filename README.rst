@@ -51,6 +51,7 @@ plain python object definition
 registering and use it.
 
 ::
+
     from garakta import create_registry
     # create registry
     reg = create_registry()
@@ -130,6 +131,6 @@ runtime
 
 
 swapping(for testing)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------
 
 TBD
