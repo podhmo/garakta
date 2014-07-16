@@ -12,14 +12,13 @@ features
 utilities
 ----------------------------------------
 
-utilities is useful components instance.
+`utility` is useful components instance.
 registering object instance, and use it.
 
+
+plain python object definition
+
 ::
-
-    from garakta import create_registry
-    reg = create_registry()
-
 
     from abc import ABCMeta, abstractmethod
 
@@ -52,6 +51,10 @@ registering object instance, and use it.
 registering and use it.
 
 ::
+    from garakta import create_registry
+    # create registry
+    reg = create_registry()
+
 
     # for real application
     reg.utilities.register(Storage, FileStorage("savedata.json"))
@@ -124,3 +127,9 @@ runtime
 
     uploader = reg(reg[Storage]).uploader(connection)
     uploader.save({"foo": "bar"}, "foo.json")
+
+
+swapping(for testing)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+TBD
