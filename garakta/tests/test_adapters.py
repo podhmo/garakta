@@ -51,6 +51,15 @@ def test__lookup_found__ok():
     assert result == u"保存場所: hmm"
 
 
+def test__lookup__inherited__found__ok():
+    reg = _makeOne()
+
+    reg.adapters.register(Storage, "display_name", get_storage_name_for_storage)
+
+    result = reg(MockStorage()).display_name()
+    assert result == u"保存場所"
+
+
 def test__lookup__attributes_is__not_found__raise_attribute_error():
     reg = _makeOne()
 

@@ -90,7 +90,7 @@ adapter is like a method adapted after class definition.
         return u"保存場所: {}".format(storage.name)
 
     reg.adapters.register(Storage, "display_name", get_display_name_for_storage)
-    reg.adapters.register(FileStorage, "display_name", get_storage_name_for_file_storage, polimorphic=True)
+    reg.adapters.register(FileStorage, "display_name", get_storage_name_for_file_storage)
 
 
 runtime

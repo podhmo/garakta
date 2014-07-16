@@ -110,13 +110,8 @@ class AdapterRegistry(object):
                 return factory.create(cls)
         raise ComponentNotFound(target_class)
 
-    def register(self, src, name, fn, polimorphic=False):
+    def register(self, src, name, fn):
         self.proxy_factories[src][name] = fn
-
-    # def reorder(self, repo, name):
-    #     targets = repo[name]
-    #     targets = list(sorted(targets, key=lambda xs: len(xs[0].__mro__)))
-    #     repo[name] = targets
 
 
 class Validation(object):
