@@ -38,7 +38,7 @@ registering object instance, and use it.
 
         def save(self, data):
             with open(self.name, "w") as wf:
-                wf.write(json.dumps(data))
+                self.write(json.dumps(data))
 
 
     class MockStorage(Storage):
@@ -49,7 +49,7 @@ registering object instance, and use it.
             self.data = data
 
 
-runtime
+registering and use it.
 
 ::
 
@@ -71,11 +71,11 @@ When registering utilities, we can validate registered object.
     def has_name(registry, target):
         return hasattr(target, "name")
 
-    reg.validation(Storage).append(has_name)
-    reg.register(Storage, MockStorage())  # ValidationError is raised.
+    reg.utilities.validation[Storage].append(has_name)
+    reg.utilities.register(Storage, MockStorage())  # ValidationError is raised.
 
 adapters
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------------
 
 adapters is transformation feature, from a source to a destination.
 
@@ -86,7 +86,7 @@ adapter is like a method adapted after class definition.
     def get_storage_name_for_storage(storage):
         return u"保存場所"  # save point
 
-    def get_storage_name_for_file_storage(storage):di
+    def get_storage_name_for_file_storage(storage):
         return u"保存場所: {}".format(s.name)
 
     reg.adapters.display_name(Storage, get_display_name_for_storage)
@@ -116,12 +116,12 @@ Or, adapter is class factory for related object.
             self.storage.save(data)
             self.upload(data, filename)
 
-    reg.adapters.uploader(Storage, S3Uploader)
+    reg.adapters.uploader(Storage, S3UploadWrapper)
 
 
 runtime
 
 ::
 
-    uploader = reg.adapters(MockStrage()).uploader()
+    uploader = reg.adapters(reg[Storage]).uploader(connection)
     uploader.save({"foo": "bar"}, "foo.json")

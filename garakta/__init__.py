@@ -1,5 +1,16 @@
 # -*- coding:utf-8 -*-
-class ComponentNotFound(Exception):
+from collections import defaultdict
+
+
+class ComponentError(Exception):
+    pass
+
+
+class ComponentNotFound(ComponentError):
+    pass
+
+
+class InvalidComponent(ComponentError):
     pass
 
 
@@ -11,13 +22,22 @@ class Registry(object):
     def __getitem__(self, k):
         return self.utilities.lookup(k)
 
+    @property
+    def validation(self):
+        return self.utilities.validation
+
 
 class UtilitiyRegistry(object):
-    def __init__(self, sentinel=object):
+    def __init__(self, validation=None, sentinel=object):
         self.registry = {}
+        self.validation = validation
         self.sentinel = sentinel
 
     def register(self, k, instance):
+        for v in self.validation.get(k, []):
+            status = v(self, instance)
+            if status is False:
+                raise InvalidComponent(v, instance)
         self.registry[k] = instance
 
     def lookup(self, cls):
@@ -37,12 +57,24 @@ class UtilitiyRegistry(object):
         raise ComponentNotFound(target_class)
 
 
-class Adapters(object):
-    pass
+class AdapterRegistry(object):
+    def __init__(self):
+        self.registry = {}
+
+
+class Validation(object):
+    def __init__(self):
+        self.registry = defaultdict(list)
+
+    def __getitem__(self, k):
+        return self.registry[k]
+
+    def get(self, k, default=None):
+        return self.registry.get(k, default)
 
 
 def create_registry():
     return Registry(
-        UtilitiyRegistry(),
+        UtilitiyRegistry(Validation()),
         None
     )

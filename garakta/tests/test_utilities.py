@@ -81,3 +81,29 @@ def test_lookup_component__inherited__multiple__ok():
     # really cached?
     with pytest.raises(Exception):
         reg[FileStorage]
+
+
+def test_register__with_validation__ng__raise_error():
+    from garakta import InvalidComponent
+
+    def has_name(registry, target):
+        return hasattr(target, "name")
+
+    reg = _makeOne()
+
+    reg.utilities.validation[Storage].append(has_name)
+    with pytest.raises(InvalidComponent):
+        reg.utilities.register(Storage, MockStorage())
+
+
+def test_register__with_validation__ok():
+    from garakta import InvalidComponent
+
+    def has_name(registry, target):
+        return hasattr(target, "name")
+
+    reg = _makeOne()
+
+    reg.utilities.validation[Storage].append(has_name)
+    reg.utilities.register(Storage, FileStorage("hmm"))
+
