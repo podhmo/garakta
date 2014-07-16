@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 from collections import defaultdict
+from functools import wraps
 
 
 class ComponentError(Exception):
@@ -7,6 +8,10 @@ class ComponentError(Exception):
 
 
 class ComponentNotFound(ComponentError):
+    pass
+
+
+class ComponentNotPolymorphic(ComponentError):
     pass
 
 
@@ -21,6 +26,9 @@ class Registry(object):
 
     def __getitem__(self, k):
         return self.utilities.lookup(k)
+
+    def __call__(self, src):
+        return self.adapters.lookup(src)
 
     @property
     def validation(self):
@@ -57,9 +65,58 @@ class UtilitiyRegistry(object):
         raise ComponentNotFound(target_class)
 
 
+class AdapterProxyFactory(object):
+    def proxy_init(self, ob):
+        self.ob = ob
+
+    def __init__(self, proxy_init=proxy_init):
+        self.attrs = {"__init__": proxy_init}
+
+    def __setitem__(self, k, v):
+        self.attrs[k] = self.wrap(v)
+
+    def wrap(self_, fn):
+        @wraps(fn)
+        def wrapped(self, *args, **kwargs):
+            return fn(self.ob, *args, **kwargs)
+        return wrapped
+
+    def create(self, src):
+        return type("{}AdapterProxy".format(src.__name__), (object, ), self.attrs)
+
+
 class AdapterRegistry(object):
-    def __init__(self):
-        self.registry = {}
+    def __init__(self, sentinel=object):
+        self.sentinel = sentinel
+        self.proxy_factories = defaultdict(AdapterProxyFactory)
+        self.cache = {}
+
+    def lookup(self, ob):
+        return self.proxy_from_class(ob.__class__)(ob)
+
+    def proxy_from_class(self, cls):
+        try:
+            return self.cache[cls]
+        except KeyError:
+            v = self.cache[cls] = self.walk_for_parent(cls)
+            return v
+
+    def walk_for_parent(self, target_class):
+        for cls in target_class.__mro__:
+            if self.sentinel == cls:
+                raise ComponentNotFound(target_class)
+            factory = self.proxy_factories.get(cls)
+            if factory is not None:
+                return factory.create(cls)
+        raise ComponentNotFound(target_class)
+
+    def register(self, src, name, fn, polimorphic=False):
+        self.proxy_factories[src][name] = fn
+
+    # def reorder(self, repo, name):
+    #     targets = repo[name]
+    #     targets = list(sorted(targets, key=lambda xs: len(xs[0].__mro__)))
+    #     repo[name] = targets
 
 
 class Validation(object):
@@ -76,5 +133,5 @@ class Validation(object):
 def create_registry():
     return Registry(
         UtilitiyRegistry(Validation()),
-        None
+        AdapterRegistry()
     )

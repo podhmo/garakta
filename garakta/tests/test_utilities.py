@@ -97,8 +97,6 @@ def test_register__with_validation__ng__raise_error():
 
 
 def test_register__with_validation__ok():
-    from garakta import InvalidComponent
-
     def has_name(registry, target):
         return hasattr(target, "name")
 

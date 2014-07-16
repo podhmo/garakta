@@ -87,17 +87,17 @@ adapter is like a method adapted after class definition.
         return u"保存場所"  # save point
 
     def get_storage_name_for_file_storage(storage):
-        return u"保存場所: {}".format(s.name)
+        return u"保存場所: {}".format(storage.name)
 
-    reg.adapters.display_name(Storage, get_display_name_for_storage)
-    reg.adapters.display_name(FileStorage, get_storage_name_for_file_storage, polimorphic=True)
+    reg.adapters.register(Storage, "display_name", get_display_name_for_storage)
+    reg.adapters.register(FileStorage, "display_name", get_storage_name_for_file_storage, polimorphic=True)
 
 
 runtime
 
 ::
 
-    reg.adapters(MockStorage()).display_name()  # => 保存場所
+    reg(MockStorage()).display_name()  # => 保存場所
 
 Or, adapter is class factory for related object.
 
@@ -116,12 +116,12 @@ Or, adapter is class factory for related object.
             self.storage.save(data)
             self.upload(data, filename)
 
-    reg.adapters.uploader(Storage, S3UploadWrapper)
+    reg.adapters.register(Storage, "uploader", S3UploadWrapper)
 
 
 runtime
 
 ::
 
-    uploader = reg.adapters(reg[Storage]).uploader(connection)
+    uploader = reg(reg[Storage]).uploader(connection)
     uploader.save({"foo": "bar"}, "foo.json")
