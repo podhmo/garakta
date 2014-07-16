@@ -77,8 +77,6 @@ When registering utilities, we can validate registered object.
 adapters
 ----------------------------------------------
 
-adapters is transformation feature, from a source to a destination.
-
 adapter is like a method adapted after class definition.
 
 ::
@@ -98,6 +96,7 @@ runtime
 ::
 
     reg(MockStorage()).display_name()  # => 保存場所
+    reg(FileStorage("hmm.json")).display_name()  # => 保存場所: hmm.json
 
 Or, adapter is class factory for related object.
 
