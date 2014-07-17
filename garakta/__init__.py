@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 from collections import defaultdict
 from functools import wraps
+from weakref import WeakKeyDictionary
 
 
 class ComponentError(Exception):
@@ -8,10 +9,6 @@ class ComponentError(Exception):
 
 
 class ComponentNotFound(ComponentError):
-    pass
-
-
-class ComponentNotPolymorphic(ComponentError):
     pass
 
 
@@ -65,12 +62,12 @@ class UtilitiyRegistry(object):
         raise ComponentNotFound(target_class)
 
 
-class AdapterProxyFactory(object):
-    def proxy_init(self, ob):
+class AdapterFactory(object):
+    def init(self, ob):
         self.ob = ob
 
-    def __init__(self, proxy_init=proxy_init):
-        self.attrs = {"__init__": proxy_init}
+    def __init__(self, init=init):
+        self.attrs = {"__init__": init}
 
     def __setitem__(self, k, v):
         self.attrs[k] = self.wrap(v)
@@ -82,36 +79,41 @@ class AdapterProxyFactory(object):
         return wrapped
 
     def create(self, src):
-        return type("{}AdapterProxy".format(src.__name__), (object, ), self.attrs)
+        return type("{}Adapter".format(src.__name__), (object, ), self.attrs)
 
 
 class AdapterRegistry(object):
     def __init__(self, sentinel=object):
         self.sentinel = sentinel
-        self.proxy_factories = defaultdict(AdapterProxyFactory)
-        self.cache = {}
+        self.adapter_factories = defaultdict(AdapterFactory)
+        self.factory_cache = {}
+        self.adapter_cache = WeakKeyDictionary()
 
     def lookup(self, ob):
-        return self.proxy_from_class(ob.__class__)(ob)
-
-    def proxy_from_class(self, cls):
         try:
-            return self.cache[cls]
+            return self.adapter_cache[ob]
         except KeyError:
-            v = self.cache[cls] = self.walk_for_parent(cls)
+            v = self.adapter_cache[ob] = self.adapter_from_class(ob.__class__)(ob)
+            return v
+
+    def adapter_from_class(self, cls):
+        try:
+            return self.factory_cache[cls]
+        except KeyError:
+            v = self.factory_cache[cls] = self.walk_for_parent(cls)
             return v
 
     def walk_for_parent(self, target_class):
         for cls in target_class.__mro__:
             if self.sentinel == cls:
                 raise ComponentNotFound(target_class)
-            factory = self.proxy_factories.get(cls)
+            factory = self.adapter_factories.get(cls)
             if factory is not None:
                 return factory.create(cls)
         raise ComponentNotFound(target_class)
 
     def register(self, src, name, fn):
-        self.proxy_factories[src][name] = fn
+        self.adapter_factories[src][name] = fn
 
 
 class Validation(object):

@@ -73,3 +73,10 @@ def test__lookup__adapter_is__not_found__raise_error():
     reg = _makeOne()
     with pytest.raises(ComponentNotFound):
         reg(FileStorage("hmm")).missing()
+
+
+def test__lookup__adapter_is_cached():
+    reg = _makeOne()
+    reg.adapters.register(FileStorage, "display_name", get_storage_name_for_file_storage)
+    storage = FileStorage("hmm")
+    assert reg(storage) is reg(storage)
